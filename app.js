@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const ejs = require('ejs');
+const Article = require('./models/wikiDB');
 
 const app = express();
 
@@ -20,18 +21,23 @@ mongoose.connect('mongodb://localhost:27017/wikiDB', {
 .then(() => console.log('DB Connected...'))
 .catch(error => console.error(error))
 
-const articleSchema = {
-    title: String,
-    content: String
-};
+app.get('/articles', async (req, res) => {
+    const foundArticles = await Article.find();
 
-const Article = mongoose.model('Article', articleSchema);
+    res.send(foundArticles);
+})
 
-app.get('/articles', function(req, res){
-    Article.find(function(err, foundArticles){
-        res.send(foundArticles);
-    });
-});
+app.post('/articles', (req, res) => {
+    const { title, content } = req.body;
+
+    const newArticle = new Article({ title, content });
+
+    newArticle.save().then(() => {
+        res.send('Success');
+    }).catch((error) => {
+        res.send(error);
+    })
+})
 
 app.listen(port, () => {
     console.log(`App is listening on port ${port}.`);
